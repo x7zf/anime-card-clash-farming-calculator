@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Anime Card Clash Farming Calculator</title>
 <style>
-:root{--border:rgba(255,255,255,.14);--glow:rgba(93,225,255,.38);--text:#faf9ff;--muted:#aab2ca;--accent:#8b5cf6;--accent2:#00dcff;--green:#66ffb2;--shadow:rgba(0,0,0,.42)}
+:root{--border:rgba(255,255,255,.14);--glow:rgba(93,225,255,.38);--text:#faf9ff;--muted:#aab2ca;--accent:#8b5cf6;--accent2:#00dcff;--green:#66ffb2;--red:#ff6b8a;--shadow:rgba(0,0,0,.42)}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;background:radial-gradient(circle at 12% 8%,rgba(139,92,246,.42),transparent 34%),radial-gradient(circle at 86% 22%,rgba(0,220,255,.22),transparent 32%),linear-gradient(145deg,#050611,#0b1022 55%,#06121b);padding:20px;overflow-x:hidden}
 body:before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 82%);pointer-events:none}
@@ -23,35 +23,56 @@ label{display:block;margin-bottom:8px;color:var(--muted);font-size:13px;font-wei
 .results{display:grid;gap:12px}.result{position:relative;overflow:hidden;padding:17px;border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.065));border:1px solid rgba(255,255,255,.125)}.result:after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(0,220,255,.16),transparent 65%);pointer-events:none}
 .name{position:relative;z-index:1;color:var(--muted);font-size:12px;font-weight:900}.value{position:relative;z-index:1;margin-top:7px;font-size:28px;font-weight:950;letter-spacing:-.7px;overflow-wrap:anywhere}.sub{position:relative;z-index:1;color:var(--muted);font-size:12px;margin-top:5px;line-height:1.45}
 .char{display:inline-block;animation:charPop .42s cubic-bezier(.2,1.35,.35,1) both;animation-delay:calc(var(--i) * 16ms);transform-origin:bottom}@keyframes charPop{0%{opacity:0;transform:translateY(12px) scale(.82);filter:blur(4px)}60%{opacity:1;transform:translateY(-2px) scale(1.05);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
-.progress-wrap{position:relative;z-index:1;height:14px;margin-top:12px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.11)}.progress{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));box-shadow:0 0 22px rgba(0,220,255,.35);transition:width .45s ease}.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.45}
+.progress-wrap{position:relative;z-index:1;height:14px;margin-top:12px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.11)}.progress{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));box-shadow:0 0 22px rgba(0,220,255,.35);transition:width .45s ease}.timer-progress{background:linear-gradient(90deg,var(--green),var(--accent2))}
+.timer-panel{margin-top:14px}.timer-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.timer-btn{border:1px solid transparent;border-radius:16px;padding:12px 14px;font-weight:950;color:white;background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;transition:.2s ease}.timer-btn:hover{transform:translateY(-2px)}.timer-btn.stop{background:rgba(255,107,138,.16);border-color:rgba(255,107,138,.35)}.timer-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.45}
 @media(max-width:860px){body{padding:14px}.layout{grid-template-columns:1fr}.card{padding:18px;border-radius:24px}.value{font-size:25px}}
 </style>
 </head>
 <body>
 <div class="orb one"></div><div class="orb two"></div>
 <main class="app"><section class="card">
-<header class="header"><div class="kicker">✦ Anime Card Clash</div><h1>Farming Calculator</h1><p class="subtitle">Calculate how many rewards you need, how long the grind takes, and how close you are to your goal.</p></header>
+<header class="header"><div class="kicker">✦ Anime Card Clash</div><h1>Farming Calculator</h1><p class="subtitle">Calculate rewards, grind time, and run a live timer while you farm.</p></header>
 <div class="layout">
 <section class="panel grid">
 <div class="field"><label>Current amount</label><input id="currentAmount" type="number" min="0" step="any" placeholder="Number"></div>
 <div class="field"><label>Goal amount needed</label><input id="goalAmount" type="number" min="0" step="any" placeholder="Number"></div>
 <div class="field"><label>Rewards</label><input id="rewards" type="number" min="0" step="any" placeholder="Number"></div>
 <div class="field"><label>Time per reward (seconds)</label><input id="timePerReward" type="number" min="0" step="any" placeholder="Number"></div>
+
+<div class="result timer-panel">
+<div class="name">Live reward timer</div>
+<div class="value" id="timerCountdown">Not started</div>
+<div class="sub" id="timerStatus">Press start to add rewards automatically every cycle.</div>
+<div class="progress-wrap"><div class="progress timer-progress" id="timerProgress"></div></div>
+<div class="timer-actions">
+<button class="timer-btn" id="startTimer" onclick="startTimer()">Start timer</button>
+<button class="timer-btn stop" id="stopTimer" onclick="stopTimer()" disabled>Stop</button>
+</div>
+</div>
 </section>
+
 <section class="panel results">
 <div class="result"><div class="name">Remaining amount</div><div class="value" id="remainingAmount">0</div><div class="sub">How much is left until your goal.</div></div>
 <div class="result"><div class="name">Rewards needed</div><div class="value" id="rewardsNeeded">0</div><div class="sub">How many reward cycles are needed.</div></div>
 <div class="result"><div class="name">Time needed</div><div class="value" id="timeNeeded">0 minutes</div><div class="sub" id="timeNeededSub">0 minutes total.</div></div>
 <div class="result"><div class="name">Amount per minute</div><div class="value" id="amountPerMinute">0</div><div class="sub">Useful for comparing farming methods.</div></div>
 <div class="result"><div class="name">Goal progress</div><div class="value" id="goalProgressText">0%</div><div class="progress-wrap"><div class="progress" id="goalProgress"></div></div></div>
-</section></div><div class="footer">Values save automatically in this browser. GitHub Pages ready.</div></section></main>
+</section></div><div class="footer">Timer only works while this page stays open. Values save automatically in this browser.</div></section></main>
 <script>
-const STORAGE_KEY="acc_farming_calculator_premium_only";const $=id=>document.getElementById(id);
+const STORAGE_KEY="acc_farming_calculator_timer";const $=id=>document.getElementById(id);
+let timer=null,timerStartedAt=0,timerDuration=0;
 function getNumber(id){const v=parseFloat($(id).value);return Number.isFinite(v)?v:0}
 function formatNumber(num,digits=2){if(!Number.isFinite(num))return"0";if(Math.abs(num)>=1e15)return num.toExponential(3);return num.toLocaleString(undefined,{maximumFractionDigits:digits})}
 function formatTimeDetailed(minutes){if(!Number.isFinite(minutes)||minutes<=0)return"0 minutes";const total=Math.round(minutes),days=Math.floor(total/1440),hours=Math.floor((total%1440)/60),mins=total%60,parts=[];if(days)parts.push(days+" day"+(days===1?"":"s"));if(hours)parts.push(hours+" hour"+(hours===1?"":"s"));if(mins||!parts.length)parts.push(mins+" minute"+(mins===1?"":"s"));return parts.join(" and ")}
-function setAnimatedText(id,text){const el=$(id),next=String(text);if(el.dataset.rawText===next)return;el.dataset.rawText=next;el.innerHTML="";[...next].forEach((char,i)=>{const span=document.createElement("span");span.className="char";span.style.setProperty("--i",i);span.textContent=char===" "?"\\u00A0":char;el.appendChild(span)})}
-function calculate(){const current=getNumber("currentAmount"),goal=getNumber("goalAmount"),rewards=getNumber("rewards"),seconds=getNumber("timePerReward");const remaining=Math.max(goal-current,0),needed=rewards>0?Math.ceil(remaining/rewards):0,totalMinutes=needed*seconds/60,perMinute=seconds>0?rewards/(seconds/60):0,progress=goal>0?Math.min(current/goal*100,100):0;setAnimatedText("remainingAmount",formatNumber(remaining));setAnimatedText("rewardsNeeded",formatNumber(needed,0));setAnimatedText("timeNeeded",formatTimeDetailed(totalMinutes));$("timeNeededSub").textContent=formatNumber(totalMinutes)+" minutes total.";setAnimatedText("amountPerMinute",formatNumber(perMinute));setAnimatedText("goalProgressText",formatNumber(progress,4)+"%");$("goalProgress").style.width=progress+"%";saveValues()}
+function formatSeconds(seconds){seconds=Math.max(0,Math.ceil(seconds));const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),s=seconds%60;const parts=[];if(h)parts.push(h+"h");if(m)parts.push(m+"m");parts.push(s+"s");return parts.join(" ")}
+function setAnimatedText(id,text){const el=$(id),next=String(text);if(el.dataset.rawText===next)return;el.dataset.rawText=next;el.innerHTML="";[...next].forEach((char,i)=>{const span=document.createElement("span");span.className="char";span.style.setProperty("--i",i);span.textContent=char===" "?"\u00A0":char;el.appendChild(span)})}
+function calculate(){const current=getNumber("currentAmount"),goal=getNumber("goalAmount"),rewards=getNumber("rewards"),seconds=getNumber("timePerReward");const remaining=Math.max(goal-current,0),needed=rewards>0?Math.ceil(remaining/rewards):0,totalMinutes=needed*seconds/60,perMinute=seconds>0?rewards/(seconds/60):0,progress=goal>0?Math.min(current/goal*100,100):0;setAnimatedText("remainingAmount",formatNumber(remaining));setAnimatedText("rewardsNeeded",formatNumber(needed,0));setAnimatedText("timeNeeded",formatTimeDetailed(totalMinutes));$("timeNeededSub").textContent=formatNumber(totalMinutes)+" minutes total.";setAnimatedText("amountPerMinute",formatNumber(perMinute));setAnimatedText("goalProgressText",formatNumber(progress,4)+"%");$("goalProgress").style.width=progress+"%";saveValues();if(goal>0&&current>=goal&&timer)stopTimer("Goal reached. Timer stopped.")}
+function addRewardCycle(){const current=getNumber("currentAmount"),rewards=getNumber("rewards");$("currentAmount").value=formatClean(current+rewards);calculate()}
+function formatClean(n){return Number.isInteger(n)?String(n):String(+n.toFixed(6))}
+function startTimer(){const seconds=getNumber("timePerReward"),rewards=getNumber("rewards");if(seconds<=0||rewards<=0){alert("Enter rewards and time per reward first.");return}stopTimer(false);timerDuration=seconds*1000;timerStartedAt=Date.now();$("startTimer").disabled=true;$("stopTimer").disabled=false;$("timerStatus").textContent="Timer running. Rewards will be added when the countdown ends.";timer=setInterval(tickTimer,200);tickTimer()}
+function tickTimer(){const elapsed=Date.now()-timerStartedAt;let remaining=timerDuration-elapsed;if(remaining<=0){addRewardCycle();timerStartedAt=Date.now();remaining=timerDuration}$("timerCountdown").textContent=formatSeconds(remaining/1000);$("timerProgress").style.width=Math.min(elapsed/timerDuration*100,100)+"%"}
+function stopTimer(message){if(timer){clearInterval(timer);timer=null}$("startTimer").disabled=false;$("stopTimer").disabled=true;$("timerProgress").style.width="0%";if(message===false)return;$("timerCountdown").textContent="Not started";$("timerStatus").textContent=message||"Timer stopped."}
 function saveValues(){const values={};document.querySelectorAll("input").forEach(input=>values[input.id]=input.value);localStorage.setItem(STORAGE_KEY,JSON.stringify(values))}
 function loadValues(){try{const values=JSON.parse(localStorage.getItem(STORAGE_KEY));if(!values)return;Object.entries(values).forEach(([id,value])=>{if($(id))$(id).value=value})}catch{}}
 document.querySelectorAll("input").forEach(input=>input.addEventListener("input",calculate));loadValues();calculate();
