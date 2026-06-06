@@ -1,0 +1,31 @@
+{
+  "teams": [],
+  "presets": {
+    "Raids": [
+      "Eternal Dragon",
+      "Shadow Dragon",
+      "Sword Deity",
+      "Creator of Flames",
+      "Cifer",
+      "Monster 9",
+      "True Hero",
+      "Archangel Deity",
+      "Awakened Golden Wind"
+    ],
+    "Battle Towers": [
+      "Battle Tower",
+      "Watery Depths Tower",
+      "Frozen Landscape Tower",
+      "Stone Citadel Tower",
+      "Inferno Depths Tower",
+      "Lunar Eclipse Tower",
+      "Light Fairy Tower"
+    ],
+    "Global Bosses": [
+      "Sky King",
+      "Awakened King of Curses",
+      "Dragon Tyrant"
+    ],
+    "Story Mode": []
+  }
+}

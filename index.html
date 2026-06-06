@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Anime Card Clash farming calculator and team database." />
+<title>Anime Card Clash Hub</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+:root{
+  --bg:#060711;--panel:rgba(255,255,255,.075);--panel2:rgba(255,255,255,.105);
+  --border:rgba(255,255,255,.14);--glow:rgba(93,225,255,.38);--text:#faf9ff;
+  --muted:#aab2ca;--accent:#8b5cf6;--accent2:#00dcff;--green:#66ffb2;
+  --red:#ff6b8a;--gold:#ffd166;--shadow:rgba(0,0,0,.42)
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(139,92,246,.42),transparent 34%),
+    radial-gradient(circle at 86% 22%,rgba(0,220,255,.22),transparent 32%),
+    radial-gradient(circle at 50% 100%,rgba(255,209,102,.10),transparent 28%),
+    linear-gradient(145deg,#050611,#0b1022 55%,#06121b);
+  padding:20px;overflow-x:hidden
+}
+body:before{
+  content:"";position:fixed;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 82%);
+  pointer-events:none
+}
+.orb{position:fixed;width:260px;height:260px;border-radius:999px;filter:blur(82px);opacity:.48;pointer-events:none;animation:floatOrb 9s ease-in-out infinite}
+.orb.one{top:8%;left:8%;background:var(--accent)}.orb.two{right:7%;bottom:10%;background:var(--accent2);animation-delay:1.6s}
+@keyframes floatOrb{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-24px) scale(1.08)}}
+.app{position:relative;z-index:2;width:100%;max-width:1180px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:16px;padding:14px;border-radius:24px;background:rgba(255,255,255,.07);border:1px solid var(--border);backdrop-filter:blur(24px);box-shadow:0 24px 80px rgba(0,0,0,.25)}
+.brand strong{font-size:18px;letter-spacing:-.4px}.brand span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{border:1px solid var(--border);color:var(--text);background:rgba(255,255,255,.075);border-radius:999px;padding:10px 14px;font-weight:900;cursor:pointer;transition:.2s ease}
+button:hover,.btn:hover{transform:translateY(-2px);border-color:var(--glow)}button.active,.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+.page{display:none}.page.active{display:block;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{border-radius:30px;padding:24px;background:linear-gradient(145deg,rgba(255,255,255,.115),rgba(255,255,255,.055));border:1px solid var(--border);box-shadow:0 32px 100px var(--shadow);backdrop-filter:blur(26px);overflow:hidden;position:relative}
+.card:before{content:"";position:absolute;inset:-2px;background:radial-gradient(circle at 20% 0%,rgba(139,92,246,.22),transparent 35%),radial-gradient(circle at 100% 30%,rgba(0,220,255,.14),transparent 30%);pointer-events:none}
+.card>*{position:relative;z-index:1}
+.header{text-align:center;margin-bottom:22px}.kicker{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border-radius:999px;background:rgba(139,92,246,.18);border:1px solid rgba(139,92,246,.40);color:#e6ddff;font-size:13px;font-weight:850}
+h1{margin:13px 0 8px;font-size:clamp(32px,7vw,56px);line-height:.95;letter-spacing:-2px;background:linear-gradient(90deg,#fff,#d6ccff 40%,#87f0ff 78%);-webkit-background-clip:text;color:transparent}
+h2{margin:0 0 12px;letter-spacing:-.7px}.subtitle{color:var(--muted);max-width:650px;margin:0 auto;line-height:1.6}
+.layout{display:grid;grid-template-columns:1fr .9fr;gap:18px;align-items:start}.panel{border-radius:24px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.11);padding:18px}
+.grid{display:grid;gap:14px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.field{padding:14px;border-radius:19px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);transition:.22s ease}
+.field:focus-within{transform:translateY(-2px);border-color:var(--glow);background:rgba(255,255,255,.082);box-shadow:0 0 0 4px rgba(0,220,255,.07)}
+label{display:block;margin-bottom:8px;color:var(--muted);font-size:13px;font-weight:850}
+input,select,textarea{width:100%;border:1px solid rgba(255,255,255,.13);outline:none;background:rgba(255,255,255,.09);color:var(--text);border-radius:15px;padding:13px 14px;font-size:15px;transition:.22s ease}
+select{
+  appearance:none;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#87f0ff 50%),
+    linear-gradient(135deg,#87f0ff 50%,transparent 50%),
+    linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  background-position:calc(100% - 20px) calc(50% - 3px),calc(100% - 14px) calc(50% - 3px),0 0;
+  background-size:6px 6px,6px 6px,100% 100%;
+  background-repeat:no-repeat
+}
+input::placeholder,textarea::placeholder{color:rgba(250,249,255,.38)}textarea{min-height:92px;resize:vertical}select option{background:#101426}input:focus,select:focus,textarea:focus{border-color:rgba(0,220,255,.72)}
+.results,.team-list{display:grid;gap:12px}.result,.team-card{position:relative;overflow:hidden;padding:17px;border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.065));border:1px solid rgba(255,255,255,.125)}
+.result:after,.team-card:after{content:"";position:absolute;right:-30px;top:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(0,220,255,.16),transparent 65%);pointer-events:none}
+.name{position:relative;z-index:1;color:var(--muted);font-size:12px;font-weight:900}.value{position:relative;z-index:1;margin-top:7px;font-size:28px;font-weight:950;letter-spacing:-.7px;overflow-wrap:anywhere}
+.sub{position:relative;z-index:1;color:var(--muted);font-size:12px;margin-top:5px;line-height:1.45}
+.char{display:inline-block;animation:charPop .42s cubic-bezier(.2,1.35,.35,1) both;animation-delay:calc(var(--i) * 16ms);transform-origin:bottom}
+@keyframes charPop{0%{opacity:0;transform:translateY(12px) scale(.82);filter:blur(4px)}60%{opacity:1;transform:translateY(-2px) scale(1.05);filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.progress-wrap{position:relative;z-index:1;height:14px;margin-top:12px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.11)}.progress{height:100%;width:0%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));box-shadow:0 0 22px rgba(0,220,255,.35);transition:width .45s ease}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.toolbar>*{flex:1;min-width:180px}
+.image-drop{min-height:180px;display:grid;place-items:center;text-align:center;border:1px dashed rgba(255,255,255,.28);border-radius:20px;background:rgba(255,255,255,.045);padding:18px;color:var(--muted);cursor:pointer}
+.image-drop.dragover{border-color:var(--accent2);background:rgba(0,220,255,.08)}.preview{max-width:100%;max-height:320px;border-radius:16px;border:1px solid rgba(255,255,255,.14);display:none;margin-top:12px}
+.team-card img{position:relative;z-index:1;width:100%;max-height:420px;object-fit:contain;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:#050611;margin-top:12px}
+.badges{position:relative;z-index:1;display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.badge{font-size:12px;font-weight:900;padding:6px 9px;border-radius:999px;background:rgba(139,92,246,.18);border:1px solid rgba(139,92,246,.32);color:#e6ddff}
+.hidden{display:none!important}.status{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.5}.danger{color:#ffd6df;background:rgba(255,107,138,.13);border:1px solid rgba(255,107,138,.28);padding:12px;border-radius:16px}
+.preset-note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:6px}
+@media(max-width:860px){body{padding:14px}.topbar{align-items:flex-start;flex-direction:column}.layout,.grid.two{grid-template-columns:1fr}.card{padding:18px;border-radius:24px}.value{font-size:25px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://wvyjsjhkbxlbzerdcbrr.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2eWpzamhrYnhsYnplcmRjYnJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTUzMTcsImV4cCI6MjA5NjMzMTMxN30.u9GOMI-Yt90-9NDRsuAXtt_iRGx3HijC4EAj_XaBEkQ';
+window.supabaseClient = supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+</script>
+
+</head>
+<body>
+<div class="orb one"></div><div class="orb two"></div>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><strong>Anime Card Clash Hub</strong><span>Farming calculator + team database</span></div>
+    <nav class="nav">
+      <button class="active" onclick="showPage('calculator', this)">Farming Calculator</button>
+      <button onclick="showPage('teams', this)">Teams Database</button>
+      <button id="adminNav" class="hidden" onclick="showPage('admin', this)">Admin Panel</button>
+    </nav>
+  </div>
+
+  <section id="calculator" class="page active card">
+    <header class="header">
+      <div class="kicker">✦ Anime Card Clash</div>
+      <h1>Farming Calculator</h1>
+      <p class="subtitle">Calculate how many rewards you need, how long the grind takes, and how close you are to your goal.</p>
+    </header>
+    <div class="layout">
+      <section class="panel grid">
+        <div class="field"><label>Current amount</label><input id="currentAmount" type="number" min="0" step="any" placeholder="Number"></div>
+        <div class="field"><label>Goal amount needed</label><input id="goalAmount" type="number" min="0" step="any" placeholder="Number"></div>
+        <div class="field"><label>Rewards</label><input id="rewards" type="number" min="0" step="any" placeholder="Number"></div>
+        <div class="field"><label>Time per reward (seconds)</label><input id="timePerReward" type="number" min="0" step="any" placeholder="Number"></div>
+      </section>
+      <section class="panel results">
+        <div class="result"><div class="name">Remaining amount</div><div class="value" id="remainingAmount">0</div><div class="sub">How much is left until your goal.</div></div>
+        <div class="result"><div class="name">Rewards needed</div><div class="value" id="rewardsNeeded">0</div><div class="sub">How many reward cycles are needed.</div></div>
+        <div class="result"><div class="name">Time needed</div><div class="value" id="timeNeeded">0 minutes</div><div class="sub" id="timeNeededSub">0 minutes total.</div></div>
+        <div class="result"><div class="name">Amount per minute</div><div class="value" id="amountPerMinute">0</div><div class="sub">Useful for comparing farming methods.</div></div>
+        <div class="result"><div class="name">Goal progress</div><div class="value" id="goalProgressText">0%</div><div class="progress-wrap"><div class="progress" id="goalProgress"></div></div></div>
+      </section>
+    </div>
+  </section>
+
+  <section id="teams" class="page card">
+    <header class="header">
+      <div class="kicker">✦ Team Database</div>
+      <h1>Teams</h1>
+      <p class="subtitle">Browse teams by category, enemy, difficulty, RNG requirement, and result.</p>
+    </header>
+    <div class="toolbar">
+      <select id="filterCategory" onchange="syncFilterSubcategories();renderTeams()"><option value="">All categories</option></select>
+      <select id="filterSubcategory" onchange="renderTeams()"><option value="">All enemies</option></select>
+      <select id="filterDifficulty" onchange="renderTeams()"><option value="">All difficulties</option></select>
+      <input id="searchTeams" placeholder="Search teams..." oninput="renderTeams()">
+    </div>
+    <div class="team-list" id="teamList"></div>
+  </section>
+
+  <section id="admin" class="page card hidden">
+    <header class="header">
+      <div class="kicker">✦ Hidden Admin</div>
+      <h1>Admin Panel</h1>
+      <p class="subtitle">Add teams with preset dropdowns, custom categories, custom enemies, screenshots, and notes.</p>
+    </header>
+
+    <div id="loginBox" class="panel">
+      <h2>Unlock admin</h2>
+      <div class="field"><label>Password</label><input id="adminPassword" type="password" placeholder="Enter admin password"></div>
+      <button class="primary" onclick="unlockAdmin()">Unlock</button>
+      <p class="status">Type the secret command to reveal this panel. Replace the password in your final deployed version.</p>
+    </div>
+
+    <div id="adminBox" class="hidden">
+      <div class="layout">
+        <section class="panel grid">
+          <h2>Add Team</h2>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Category</label>
+              <select id="teamCategoryPreset" onchange="handleCategoryChange()"></select>
+              <input id="customCategory" class="hidden" placeholder="Write custom category" oninput="handleCategoryChange()">
+              <div class="preset-note">Selecting Other lets you create a new preset category.</div>
+            </div>
+
+            <div class="field">
+              <label>Enemy / Subcategory</label>
+              <select id="teamSubcategoryPreset" onchange="handleSubcategoryChange()"></select>
+              <input id="customSubcategory" class="hidden" placeholder="Write custom enemy/subcategory" oninput="handleSubcategoryChange()">
+              <div class="preset-note">Custom enemies become presets after submit.</div>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Difficulty</label>
+              <select id="teamDifficulty"></select>
+            </div>
+            <div class="field">
+              <label>RNG Requirement</label>
+              <select id="teamRngPreset" onchange="toggleOther('teamRngPreset','customRng')"></select>
+              <input id="customRng" class="hidden" placeholder="Write custom RNG requirement">
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>Team Status / Result</label>
+              <select id="teamResultPreset" onchange="toggleOther('teamResultPreset','customResult')"></select>
+              <input id="customResult" class="hidden" placeholder="Write custom result">
+            </div>
+            <div class="field">
+              <label>Tags</label>
+              <input id="teamTags" placeholder="F2P, AFK, Burn, Freeze">
+            </div>
+          </div>
+
+          <div class="field"><label>Title</label><input id="teamTitle" placeholder="Example: Beats Celestial with medium RNG"></div>
+          <div class="field"><label>Notes</label><textarea id="teamNotes" placeholder="Traits, replacements, conditions, extra info..."></textarea></div>
+
+          <div class="image-drop" id="imageDrop" tabindex="0">
+            <div>Paste an image here with Ctrl+V, drag an image here, or click to upload.</div>
+            <input id="imageFile" type="file" accept="image/*" hidden>
+          </div>
+          <img id="imagePreview" class="preview" alt="Team preview">
+
+          <button class="primary" onclick="submitTeam()">Submit team</button>
+          <p class="status" id="adminStatus">Set your Worker URL in the code before publishing. Until then, submissions preview locally only.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Important security note</h2>
+          <p class="status">The admin panel can be hidden, but frontend passwords are public in a public repo. Real protection must happen in the Cloudflare Worker.</p>
+          <p class="danger">Never put a GitHub token inside index.html.</p>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "REPLACE_THIS_PASSWORD";
+const SECRET_COMMAND = "accadmin";
+const WORKER_URL = "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE";
+const ADMIN_SHARED_SECRET = "SET_THE_SAME_SECRET_IN_CLOUDFLARE_WORKER";
+const STORAGE_KEY = "acc_farming_values_v5";
+const $ = id => document.getElementById(id);
+
+const DEFAULT_PRESETS = {
+  "Raids": ["Eternal Dragon", "Shadow Dragon", "Sword Deity", "Creator of Flames", "Cifer", "Monster 9", "True Hero", "Archangel Deity", "Awakened Golden Wind"],
+  "Battle Towers": ["Battle Tower", "Watery Depths Tower", "Frozen Landscape Tower", "Stone Citadel Tower", "Inferno Depths Tower", "Lunar Eclipse Tower", "Light Fairy Tower"],
+  "Global Bosses": ["Sky King", "Awakened King of Curses", "Dragon Tyrant"],
+  "Story Mode": []
+};
+
+const DIFFICULTIES = ["Easy", "Medium", "Hard", "Extreme", "Nightmare", "Celestial"];
+const RNG_OPTIONS = ["Very Low", "Low", "Medium", "High", "Very High", "Other"];
+const RESULT_OPTIONS = ["Beats Easy", "Beats Medium", "Beats Hard", "Beats Extreme", "Beats Nightmare", "Beats Celestial", "One Shot", "AFK Farm", "Speed Farm", "Other"];
+
+let teams = [];
+let presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+let imageDataUrl = "";
+let typed = "";
+
+function showPage(id, btn) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+  $(id).classList.add("active");
+  if (btn) btn.classList.add("active");
+  if (id === "teams") renderTeams();
+}
+
+function getNumber(id) { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : 0; }
+function formatNumber(num, digits = 2) { if (!Number.isFinite(num)) return "0"; if (Math.abs(num) >= 1e15) return num.toExponential(3); return num.toLocaleString(undefined, { maximumFractionDigits: digits }); }
+
+function formatTimeDetailed(minutes) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return "0 minutes";
+  const total = Math.round(minutes);
+  const days = Math.floor(total / 1440);
+  const hours = Math.floor((total % 1440) / 60);
+  const mins = total % 60;
+  const parts = [];
+  if (days) parts.push(days + " day" + (days === 1 ? "" : "s"));
+  if (hours) parts.push(hours + " hour" + (hours === 1 ? "" : "s"));
+  if (mins || parts.length === 0) parts.push(mins + " minute" + (mins === 1 ? "" : "s"));
+  return parts.join(" and ");
+}
+
+function setAnimatedText(id, text) {
+  const el = $(id), next = String(text);
+  if (el.dataset.rawText === next) return;
+  el.dataset.rawText = next; el.innerHTML = "";
+  [...next].forEach((char, i) => {
+    const span = document.createElement("span");
+    span.className = "char"; span.style.setProperty("--i", i);
+    span.textContent = char === " " ? "\u00A0" : char; el.appendChild(span);
+  });
+}
+
+function calculate() {
+  const current = getNumber("currentAmount");
+  const goal = getNumber("goalAmount");
+  const rewards = getNumber("rewards");
+  const seconds = getNumber("timePerReward");
+  const remaining = Math.max(goal - current, 0);
+  const needed = rewards > 0 ? Math.ceil(remaining / rewards) : 0;
+  const totalMinutes = needed * seconds / 60;
+  const perMinute = seconds > 0 ? rewards / (seconds / 60) : 0;
+  const progress = goal > 0 ? Math.min(current / goal * 100, 100) : 0;
+  setAnimatedText("remainingAmount", formatNumber(remaining));
+  setAnimatedText("rewardsNeeded", formatNumber(needed, 0));
+  setAnimatedText("timeNeeded", formatTimeDetailed(totalMinutes));
+  $("timeNeededSub").textContent = formatNumber(totalMinutes) + " minutes total.";
+  setAnimatedText("amountPerMinute", formatNumber(perMinute));
+  setAnimatedText("goalProgressText", formatNumber(progress, 4) + "%");
+  $("goalProgress").style.width = progress + "%";
+  saveCalc();
+}
+
+function saveCalc() {
+  const values = {};
+  document.querySelectorAll("#calculator input").forEach(i => values[i.id] = i.value);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+}
+function loadCalc() {
+  try {
+    const values = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!values) return;
+    Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).value = value; });
+  } catch {}
+}
+
+async function loadTeams() {
+  try {
+    const res = await fetch("teams.json?cache=" + Date.now());
+    const data = await res.json();
+    teams = Array.isArray(data.teams) ? data.teams : [];
+    presets = data.presets && typeof data.presets === "object" ? data.presets : JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+  } catch {
+    teams = [];
+    presets = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+  }
+  hydratePresetsFromTeams();
+  buildAllDropdowns();
+  renderTeams();
+}
+
+function hydratePresetsFromTeams() {
+  teams.forEach(t => {
+    if (!t.category) return;
+    if (!presets[t.category]) presets[t.category] = [];
+    if (t.subcategory && !presets[t.category].includes(t.subcategory)) presets[t.category].push(t.subcategory);
+  });
+}
+
+function optionList(items, includeOther = false, placeholder = "") {
+  let html = placeholder ? `<option value="">${escapeHtml(placeholder)}</option>` : "";
+  html += items.map(x => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+  if (includeOther) html += `<option value="Other">Other</option>`;
+  return html;
+}
+
+function buildAllDropdowns() {
+  const cats = Object.keys(presets).sort();
+  $("filterCategory").innerHTML = optionList(cats, false, "All categories");
+  syncFilterSubcategories();
+
+  $("teamCategoryPreset").innerHTML = optionList(cats, true, "Choose category");
+  $("teamDifficulty").innerHTML = optionList(DIFFICULTIES, false, "");
+  $("filterDifficulty").innerHTML = optionList(DIFFICULTIES, false, "All difficulties");
+  $("teamRngPreset").innerHTML = optionList(RNG_OPTIONS.filter(x => x !== "Other"), true, "Choose RNG");
+  $("teamResultPreset").innerHTML = optionList(RESULT_OPTIONS.filter(x => x !== "Other"), true, "Choose result");
+  handleCategoryChange();
+}
+
+function syncFilterSubcategories() {
+  const cat = $("filterCategory").value;
+  const subs = cat && presets[cat] ? presets[cat] : [...new Set(Object.values(presets).flat())].sort();
+  $("filterSubcategory").innerHTML = optionList(subs, false, "All enemies");
+}
+
+function handleCategoryChange() {
+  const selected = $("teamCategoryPreset").value;
+  $("customCategory").classList.toggle("hidden", selected !== "Other");
+  const category = selected === "Other" ? $("customCategory").value.trim() : selected;
+  const subs = category && presets[category] ? presets[category] : [];
+  $("teamSubcategoryPreset").innerHTML = optionList(subs, true, "Choose enemy/subcategory");
+  handleSubcategoryChange();
+}
+
+function handleSubcategoryChange() {
+  $("customSubcategory").classList.toggle("hidden", $("teamSubcategoryPreset").value !== "Other");
+}
+
+function toggleOther(selectId, inputId) {
+  $(inputId).classList.toggle("hidden", $(selectId).value !== "Other");
+}
+
+function getChosenValue(selectId, customId) {
+  const selected = $(selectId).value;
+  if (selected === "Other") return $(customId).value.trim();
+  return selected.trim();
+}
+
+function addPreset(category, subcategory) {
+  if (!category) return;
+  if (!presets[category]) presets[category] = [];
+  if (subcategory && !presets[category].includes(subcategory)) presets[category].push(subcategory);
+}
+
+function renderTeams() {
+  const cat = $("filterCategory").value.toLowerCase();
+  const sub = $("filterSubcategory").value.toLowerCase();
+  const diff = $("filterDifficulty").value.toLowerCase();
+  const search = $("searchTeams").value.toLowerCase();
+  const list = $("teamList");
+  const filtered = teams.filter(t => {
+    const text = [t.category,t.subcategory,t.difficulty,t.rng,t.result,t.title,t.notes,t.tags].join(" ").toLowerCase();
+    return (!cat || (t.category||"").toLowerCase() === cat)
+      && (!sub || (t.subcategory||"").toLowerCase() === sub)
+      && (!diff || (t.difficulty||"").toLowerCase() === diff)
+      && (!search || text.includes(search));
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div class="team-card"><div class="value">No teams found</div><div class="sub">Add teams through the hidden admin panel.</div></div>';
+    return;
+  }
+  list.innerHTML = filtered.map(t => `
+    <article class="team-card">
+      <div class="name">${escapeHtml(t.category || "Uncategorized")} / ${escapeHtml(t.subcategory || "Unknown")}</div>
+      <div class="value">${escapeHtml(t.title || "Team")}</div>
+      <div class="badges">
+        <span class="badge">${escapeHtml(t.difficulty || "Unknown")}</span>
+        <span class="badge">RNG: ${escapeHtml(t.rng || "Unknown")}</span>
+        ${t.result ? `<span class="badge">${escapeHtml(t.result)}</span>` : ""}
+      </div>
+      ${t.tags ? `<div class="sub">Tags: ${escapeHtml(t.tags)}</div>` : ""}
+      ${t.notes ? `<div class="sub">${escapeHtml(t.notes)}</div>` : ""}
+      ${t.image ? `<img src="${escapeAttr(t.image)}" alt="Team screenshot">` : ""}
+    </article>
+  `).join("");
+}
+
+function escapeHtml(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+function escapeAttr(str) { return escapeHtml(str); }
+
+document.addEventListener("keydown", e => {
+  typed = (typed + e.key.toLowerCase()).slice(-SECRET_COMMAND.length);
+  if (typed === SECRET_COMMAND) {
+    $("adminNav").classList.remove("hidden");
+    $("admin").classList.remove("hidden");
+    showPage("admin", $("adminNav"));
+  }
+});
+
+function unlockAdmin() {
+  if ($("adminPassword").value === ADMIN_PASSWORD) {
+    $("loginBox").classList.add("hidden");
+    $("adminBox").classList.remove("hidden");
+  } else {
+    alert("Wrong password");
+  }
+}
+
+function handleImageFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    imageDataUrl = reader.result;
+    $("imagePreview").src = imageDataUrl;
+    $("imagePreview").style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+const drop = $("imageDrop");
+drop.addEventListener("click", () => $("imageFile").click());
+$("imageFile").addEventListener("change", e => handleImageFile(e.target.files[0]));
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("dragover"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+drop.addEventListener("drop", e => {
+  e.preventDefault(); drop.classList.remove("dragover");
+  handleImageFile(e.dataTransfer.files[0]);
+});
+document.addEventListener("paste", e => {
+  if (!$("admin").classList.contains("active")) return;
+  const item = [...e.clipboardData.items].find(i => i.type.startsWith("image/"));
+  if (item) handleImageFile(item.getAsFile());
+});
+
+async function submitTeam() {
+  const category = getChosenValue("teamCategoryPreset", "customCategory");
+  const subcategory = getChosenValue("teamSubcategoryPreset", "customSubcategory");
+  const rng = getChosenValue("teamRngPreset", "customRng");
+  const result = getChosenValue("teamResultPreset", "customResult");
+
+  const team = {
+    id: crypto.randomUUID(),
+    category,
+    subcategory,
+    difficulty: $("teamDifficulty").value,
+    rng,
+    result,
+    title: $("teamTitle").value.trim(),
+    tags: $("teamTags").value.trim(),
+    notes: $("teamNotes").value.trim(),
+    image: imageDataUrl,
+    createdAt: new Date().toISOString()
+  };
+
+  if (!team.category || !team.subcategory || !team.title) {
+    alert("Category, enemy/subcategory, and title are required.");
+    return;
+  }
+
+  addPreset(team.category, team.subcategory);
+  buildAllDropdowns();
+
+  if (WORKER_URL.includes("PASTE_YOUR")) {
+    $("adminStatus").textContent = "Set WORKER_URL in index.html first. For now, this team was only preview-added locally.";
+    teams.unshift(team); renderTeams(); return;
+  }
+
+  $("adminStatus").textContent = "Submitting...";
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": ADMIN_SHARED_SECRET },
+      body: JSON.stringify({ team, presets })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    $("adminStatus").textContent = "Team submitted. It may take a moment for GitHub Pages to refresh.";
+    await loadTeams();
+  } catch (err) {
+    $("adminStatus").textContent = "Submit failed: " + err.message;
+  }
+}
+
+document.querySelectorAll("#calculator input").forEach(i => i.addEventListener("input", calculate));
+loadCalc(); calculate(); loadTeams();
+</script>
+</body>
+</html>

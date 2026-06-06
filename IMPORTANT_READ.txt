@@ -1,0 +1,9 @@
+This package injects Supabase client configuration.
+
+To fully migrate:
+1. Create tables using SUPABASE_SETUP.sql
+2. Replace teams.json loading with Supabase queries
+3. Replace image handling with Supabase Storage bucket 'team-images'
+4. Connect submitTeam() to Supabase inserts
+
+The existing UI remains intact as a starting point.
